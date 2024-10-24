@@ -1,211 +1,256 @@
 import numpy as np
-from scipy import linalg
+import matplotlib.pyplot as plt
+from scipy.stats import t
+from sklearn.linear_model import LinearRegression
+
+
+# Zad 1
+# Parametry regresji
+b0 = 5  # Wyraz wolny
+beta1 = 2  # Współczynnik kierunkowy
+n = 1000  # Liczba próbek
+df = 5  # Liczba stopni swobody (v)
+
+# Zmienna do przechowywania wartości estymowanych b_0 i b_1
+b0_hats = []
+b1_hats = []
+
+# Liczba symulacji
+num_simulations = 1000
+
+# Symulacja
+for _ in range(num_simulations):
+    # Generowanie epsilon (błędów) z rozkładu t-Studenta
+    epsilon = t.rvs(df, size=n)
+
+    # Generowanie wartości x i y
+    x = np.linspace(0, 10, num=n).reshape(-1, 1)  # Wartości x od 0 do 10
+    y = b0 + beta1 * x + epsilon.reshape(-1, 1)
+
+    # Dopasowanie modelu regresji liniowej
+    model = LinearRegression()
+    model.fit(x, y)
+
+    # Wyznaczanie estymowanych wartości b_0_hat i b_1_hat
+    b0_hats.append(model.intercept_[0])
+    b1_hats.append(model.coef_[0][0])
+
+# Wizualizacja danych (x_i, y_i) dla ostatniej symulacji
+plt.figure(figsize=(10, 6))
+plt.scatter(x, y, color='blue', alpha=0.5, label='Dane (x, y)')
+plt.plot(x, model.predict(x), color='red', label='Regresja Liniowa')
+plt.title('Wykres danych (x, y) z linią regresji')
+plt.xlabel('x (zmienna objaśniająca)')
+plt.ylabel('y (zmienna objaśniana)')
+plt.legend()
+plt.grid()
+plt.show()
+
+# Boxplot dla b_0_hat i b_1_hat
+plt.figure(figsize=(10, 6))
+plt.boxplot([b0_hats, b1_hats], labels=['$\\hat{b}_0$', '$\\hat{b}_1$'])
+plt.title('Boxplot dla estymacji $\\hat{b}_0$ i $\\hat{b}_1$')
+plt.ylabel('Wartości estymatorów')
+plt.grid(True)
+plt.show()
+
+# Obliczenie i wyświetlenie średnich wartości b_0_hat i b_1_hat
+mean_b0_hat = np.mean(b0_hats)
+mean_b1_hat = np.mean(b1_hats)
+print(f"Średnia wartość beta_0: {mean_b0_hat:.4f}")
+print(f"Średnia wartość beta_1: {mean_b1_hat:.4f}")
+
+
+# Zad 2
+
+
+# Funkcja do symulacji Monte Carlo
+def monte_carlo_simulation(n, sigma, num_simulations=1000):
+    beta1 = 2  # Prawdziwa wartość współczynnika beta_1
+    beta1_estimates = []
+
+    for _ in range(num_simulations):
+        x = np.linspace(0, 10, n).reshape(-1, 1)  # Wartości zmiennej objaśniającej
+        epsilon = np.random.normal(0, sigma, n)  # Błędy o rozkładzie N(0, sigma)
+        y = beta1 * x.flatten() + epsilon  # Model liniowy
+
+        # Dopasowanie modelu regresji
+        model = LinearRegression()
+        model.fit(x, y)
+        beta1_estimates.append(model.coef_[0])  # Zapamiętaj estymator beta1
+
+    # Obliczenie wartości oczekiwanej i wariancji estymatora beta1
+    beta1_mean = np.mean(beta1_estimates)
+    beta1_variance = np.var(beta1_estimates)
+
+    return beta1_mean, beta1_variance
+
+
+# Parametry symulacji
+sigma_values = [0.5, 1, 2, 5]  # Różne wartości sigma
+n_values = [50, 100, 500, 1000]  # Różne wielkości próby
+num_simulations = 1000  # Liczba powtórzeń Monte Carlo
+
+# Przechowywanie wyników
+results = {}
+
+# Symulacje dla różnych sigma i n
+for sigma in sigma_values:
+    for n in n_values:
+        beta1_mean, beta1_variance = monte_carlo_simulation(n, sigma, num_simulations)
+        results[(n, sigma)] = (beta1_mean, beta1_variance)
+        print(f'n={n}, sigma={sigma}: E[β1_hat]={beta1_mean:.4f}, Var[β1_hat]={beta1_variance:.4f}')
+
+# Wizualizacja wyników
+fig, ax = plt.subplots(1, 2, figsize=(12, 6))
+
+# Wartość oczekiwana estymatora β1
+means = [results[(n, sigma)][0] for sigma in sigma_values for n in n_values]
+ax[0].plot(np.repeat(n_values, len(sigma_values)), means, 'o-')
+ax[0].set_title('Wartość oczekiwana estymatora β1')
+ax[0].set_xlabel('n')
+ax[0].set_ylabel('E[β1_hat]')
+ax[0].grid(True)
+
+# Wariancja estymatora β1
+variances = [results[(n, sigma)][1] for sigma in sigma_values for n in n_values]
+ax[1].plot(np.repeat(n_values, len(sigma_values)), variances, 'o-')
+ax[1].set_title('Wariancja estymatora β1')
+ax[1].set_xlabel('n')
+ax[1].set_ylabel('Var[β1_hat]')
+ax[1].grid(True)
+
+plt.tight_layout()
+plt.show()
+
+# Zad 3
+
+# Parametry modelu regresji
+beta0 = 5  # Wyraz wolny
+beta1 = 2  # Współczynnik kierunkowy
+n = 100  # Liczba próbek
+sigma = 1  # Odchylenie standardowe błędu (epsilon)
+
+# Liczba symulacji Monte Carlo
+num_simulations = 1000
+
+# Zmienne do przechowywania estymatorów
+b0_hats = []
+b1_hats = []
+
+# Symulacje Monte Carlo
+for _ in range(num_simulations):
+    # Generowanie losowych wartości x
+    x = np.linspace(0, 10, n).reshape(-1, 1)
+
+    # Generowanie losowych błędów epsilon z rozkładu N(0, sigma)
+    epsilon = np.random.normal(0, sigma, size=n).reshape(-1, 1)
+
+    # Obliczanie wartości y zgodnie z modelem
+    y = beta0 + beta1 * x + epsilon
+
+    # Dopasowanie modelu regresji liniowej
+    model = LinearRegression()
+    model.fit(x, y)
+
+    # Zapisanie estymatorów beta0 i beta1
+    b0_hats.append(model.intercept_[0])
+    b1_hats.append(model.coef_[0][0])
+
+# Wizualizacja wyników
+# Boxplot dla b0_hat i b1_hat
+plt.figure(figsize=(10, 6))
+plt.boxplot([b0_hats, b1_hats], labels=['$\\hat{b}_0$', '$\\hat{b}_1$'])
+plt.title('Boxplot dla estymacji $\\hat{b}_0$ i $\\hat{b}_1$')
+plt.ylabel('Wartości estymatorów')
+plt.grid(True)
+plt.show()
+
+# Obliczenie średnich wartości estymatorów
+mean_b0_hat = np.mean(b0_hats)
+mean_b1_hat = np.mean(b1_hats)
+
+# Porównanie z wartościami teoretycznymi
+print(f"Średnia wartość $\\hat{{b}}_0$: {mean_b0_hat:.4f} (wartość teoretyczna: {beta0})")
+print(f"Średnia wartość $\\hat{{b}}_1$: {mean_b1_hat:.4f} (wartość teoretyczna: {beta1})")
+
+# Histogram rozkładów estymatorów
+plt.figure(figsize=(10, 6))
+
+# Histogram dla b0_hat
+plt.subplot(1, 2, 1)
+plt.hist(b0_hats, bins=30, color='blue', alpha=0.7)
+plt.axvline(beta0, color='red', linestyle='dashed', linewidth=2, label='Teoretyczne $b_0$')
+plt.title('Histogram estymatorów $\\hat{b}_0$')
+plt.legend()
+plt.grid()
+
+# Histogram dla b1_hat
+plt.subplot(1, 2, 2)
+plt.hist(b1_hats, bins=30, color='green', alpha=0.7)
+plt.axvline(beta1, color='red', linestyle='dashed', linewidth=2, label='Teoretyczne $b_1$')
+plt.title('Histogram estymatorów $\\hat{b}_1$')
+plt.legend()
+plt.grid()
+
+plt.tight_layout()
+plt.show()
 
 # Zad 4
-def gauss_elimination(A, b):
-    n = len(b)
 
-    # Tworzenie rozszerzonej macierzy układu [A | b]
-    Ab = np.hstack([A, b.reshape(-1, 1)])
+# Parametry modelu regresji
+beta0 = 5
+beta1 = 2
+n = 100
+sigma = 1
+num_simulations = 1000
+alpha = 0.05
 
-    # Eliminacja Gaussa
-    for i in range(n):
-        max_row = np.argmax(np.abs(Ab[i:, i])) + i
-        if max_row != i:
-            Ab[[i, max_row]] = Ab[[max_row, i]]
+# Zmienne do przechowywania estymatorów
+b0_hats = []
+b1_hats = []
+b0_se = []  # Standard error for beta_0
+b1_se = []  # Standard error for beta_1
 
-        if Ab[i, i] == 0:
-            raise ValueError("Macierz jest osobliwa (nieodwracalna)!")
+# Symulacje Monte Carlo
+for _ in range(num_simulations):
+    x = np.linspace(0, 10, n).reshape(-1, 1)
+    epsilon = np.random.normal(0, sigma, size=n).reshape(-1, 1)
+    y = beta0 + beta1 * x + epsilon
 
-        Ab[i] = Ab[i] / Ab[i, i]
+    model = LinearRegression()
+    model.fit(x, y)
 
-        for j in range(i + 1, n):
-            Ab[j] = Ab[j] - Ab[j, i] * Ab[i]
+    b0_hats.append(model.intercept_[0])
+    b1_hats.append(model.coef_[0][0])
 
-    # Back substitution (wyznaczanie rozwiązania)
-    x = np.zeros(n)
-    for i in range(n - 1, -1, -1):
-        x[i] = Ab[i, -1] - np.sum(Ab[i, i + 1:n] * x[i + 1:n])
+    # Obliczenie standard error
+    residuals = y - model.predict(x)
+    residual_std = np.std(residuals, ddof=2)
+    x_mean = np.mean(x)
+    s_xx = np.sum((x - x_mean) ** 2)
 
-    return x
+    se_b0 = residual_std * np.sqrt(1 / n + (x_mean ** 2) / s_xx)
+    se_b1 = residual_std / np.sqrt(s_xx)
 
+    b0_se.append(se_b0)
+    b1_se.append(se_b1)
 
-# Zad 4:
-A4 = np.array([[0, 0, 2, 1, 2],
-              [0, 1, 0, 2, -1],
-              [1, 2, 0, -2, 0],
-              [0, 0, 0, -1, 1],
-              [0, 1, -1, 1, -1]], dtype=float)
+# Studentyzacja estymatorów (znormalizowane wartości estymatorów)
+b0_t_stats = [(b0 - beta0) / se for b0, se in zip(b0_hats, b0_se)]
+b1_t_stats = [(b1 - beta1) / se for b1, se in zip(b1_hats, b1_se)]
 
-b4 = np.array([1, 1, -4, -2, -1], dtype=float)
+# Porównanie z rozkładem teoretycznym t-Studenta
+df = n - 2  # Stopnie swobody
+t_values = t.ppf([alpha / 2, 1 - alpha / 2], df)
 
-x_gauss = gauss_elimination(A4, b4)
-
-print("Zad 4: Rozwiązanie eliminacją Gaussa:")
-print(x_gauss)
-# Zad 5: Interpolacja wielomianowa
-points = np.array([[0, -1],
-                   [1, 1],
-                   [3, 3],
-                   [5, 2],
-                   [6, -2]])
-
-x5 = points[:, 0]
-y5 = points[:, 1]
-
-A5 = np.vander(x5, 5)
-coefficients_scipy = linalg.solve(A5, y5)
-
-print("Zad 5: Współczynniki wielomianu (scipy.linalg.solve):")
-print(coefficients_scipy)
-
-# Zad 6: Układ równań
-A6 = [
-    [3.50, 2.77, -0.76, 1.80],
-    [-1.80, 2.68, 3.44, -0.09],
-    [0.27, 5.07, 6.90, 1.61],
-    [1.71, 5.45, 2.68, 1.71]
-]
-
-b6 = np.array([7.31, 4.23, 13.85, 11.55])
-
-x6_scipy = linalg.solve(A6, b6)
-det_A6 = np.linalg.det(A6)
-Ax6 = np.dot(A6, x6_scipy)
-def get_minor(matrix, i, j):
-    """Zwraca macierz pomniejszoną o i-ty wiersz i j-tą kolumnę."""
-    return [row[:j] + row[j+1:] for row in (matrix[:i] + matrix[i+1:])]
-
-def is_square(matrix):
-    """Sprawdza, czy macierz jest kwadratowa."""
-    return all(len(row) == len(matrix) for row in matrix)
-
-def determinant(matrix):
-    """Rekurencyjnie oblicza wyznacznik macierzy."""
-    # Sprawdzamy, czy macierz jest kwadratowa
-    if not is_square(matrix):
-        raise ValueError("Macierz musi być kwadratowa.")
-
-    # Przypadek bazowy dla macierzy 2x2
-    if len(matrix) == 2:
-        return matrix[0][0] * matrix[1][1] - matrix[0][1] * matrix[1][0]
-
-    # Rekurencyjny przypadek dla macierzy większych
-    det = 0
-    for j in range(len(matrix)):
-        det += ((-1) ** j) * matrix[0][j] * determinant(get_minor(matrix, 0, j))
-    return det
-
-
-print("Zad 6: Rozwiązanie układu eliminacja gaussa:")
-print(gauss_elimination(A6,b6))
-# Obliczanie wyznacznika
-try:
-    result6 = determinant(A6)
-    print(f"\nWyznacznik macierzy per se:\n{result6}")
-except ValueError as e:
-    print(e)
-
-print("\nWyznacznik macierzy A (numpy.linalg.det):")
-print(det_A6)
-print("\nIloczyn A * x (taki jak b_hat):")
-print(Ax6)
-
-# Zad 7: Macierz 8x8
-A7 = [[10, -2, -1, 2, 3, 1, -4, 7],
-              [5, 11, 3, 10, -3, 3, 3, -4],
-              [7, 12, 1, 5, 3, -12, 2, 3],
-              [8, 7, -2, 1, 3, 2, 2, 4],
-              [2, -15, -1, 1, 4, -1, 8, 3],
-              [4, 2, 9, 1, 12, -1, 4, 1],
-              [-1, 4, -7, -1, 1, 1, -1, -3],
-              [-1, 3, 4, 1, 3, -4, 7, 6]]
-
-b7 = np.array([0, 12, -5, 3, -25, -26, 9, -7])
-
-x7_scipy = linalg.solve(A7, b7)
-
-print("Zad 7: Rozwiązanie układu (scipy.linalg.solve):")
-print(x7_scipy)
-
-# Zad 8: Macierz trójdiagonalna
-A8 = [[2, -1, 0, 0, 0, 0],
-              [-1, 2, -1, 0, 0, 0],
-              [0, -1, 2, -1, 0, 0],
-              [0, 0, -1, 2, -1, 0],
-              [0, 0, 0, -1, 2, -1],
-              [0, 0, 0, 0, -1, 5]]
-
-A8_inv = np.linalg.inv(A8)
-
-def is_tridiagonal(matrix):
-    n = matrix.shape[0]
-    for i in range(n):
-        for j in range(n):
-            if abs(i - j) > 1 and matrix[i, j] != 0:
-                return False
-    return True
-
-print("\nZad 8: Macierz odwrotna A^-1:")
-print(A8_inv)
-print("\nCzy macierz A^-1 jest trójdiagonalna?")
-print(is_tridiagonal(A8_inv))
-
-# Zad 9
-
-print("Zad 9")
-
-def print_matrix(matrix):
-    """Pomocnicza funkcja do ładnego wyświetlania macierzy."""
-    for row in matrix:
-        print(row)
-
-
-def gauss_jordan_inverse(matrix):
-    n = len(matrix)
-
-    # Tworzymy macierz rozszerzoną: oryginalna macierz po lewej + macierz jednostkowa po prawej
-    augmented_matrix = [matrix[i] + [float(i == j) for j in range(n)] for i in range(n)]
-
-    # Przekształcanie macierzy do formy macierzy jednostkowej po lewej stronie
-    for i in range(n):
-        # Normalizujemy wiersz tak, aby element diagonalny wynosił 1
-        diagonal_element = augmented_matrix[i][i]
-        if diagonal_element == 0:
-            raise ValueError("Macierz nie jest odwracalna.")
-
-        for j in range(2 * n):
-            augmented_matrix[i][j] /= diagonal_element
-
-        # Zerowanie pozostałych elementów w kolumnie i
-        for k in range(n):
-            if k != i:
-                factor = augmented_matrix[k][i]
-                for j in range(2 * n):
-                    augmented_matrix[k][j] -= factor * augmented_matrix[i][j]
-
-    # Wyodrębniamy macierz odwrotną z rozszerzonej macierzy
-    inverse_matrix = [row[n:] for row in augmented_matrix]
-
-    return inverse_matrix
-
-
-# Macierz A z obrazka
-A9 = [
-    [1, 3, -9, 6, 4],
-    [2, -1, 6, 7, 1],
-    [3, 2, -3, 15, 5],
-    [8, -1, 1, 4, 2],
-    [11, 1, -2, 18, 7]
-]
-
-# Znajdowanie macierzy odwrotnej
-try:
-    inverse_A = gauss_jordan_inverse(A9)
-    print("Macierz odwrotna do A:")
-    print_matrix(inverse_A)
-except ValueError as e:
-    print(e)
-
-
-
+# Histogram dla znormalizowanych estymatorów
+plt.figure(figsize=(10, 6))
+plt.hist(b0_t_stats, bins=30, color='blue', alpha=0.7, label='$\\hat{b}_0$')
+plt.hist(b1_t_stats, bins=30, color='green', alpha=0.7, label='$\\hat{b}_1$')
+plt.axvline(t_values[0], color='red', linestyle='dashed', linewidth=2, label=f'α={alpha} granice teoretyczne')
+plt.axvline(t_values[1], color='red', linestyle='dashed', linewidth=2)
+plt.title('Rozkład studentyzowanych estymatorów $\\hat{b}_0$ i $\\hat{b}_1$')
+plt.legend()
+plt.grid()
+plt.show()
