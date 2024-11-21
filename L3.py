@@ -1,8 +1,10 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.stats import norm
+from scipy.stats import norm, t
 import statsmodels.api as sm
+import pandas as pd, random, seaborn as sns, math
 
+#Zad 1
 
 def monte_carlo_confidence_intervals(n, sigma, alpha, num_simulations=1000):
     """
@@ -83,3 +85,71 @@ for n in n_values:
 
 # Opcjonalne: Wizualizacja wyników
 # Można wykorzystać matplotlib do rysowania wyników pokrycia dla różnych parametrów.
+
+# Zad 1 inaczej
+
+beta_1 = 4
+beta_0 = 2
+alphas = [0.01, 0.05]
+sigmas = [0.01, 0.5, 1]
+mi = 0
+n = 1000
+MC = 1000
+
+def b1_emp(x,y):
+    return np.sum((x - np.mean(x)) * (y))/np.sum((x-np.mean(x))**2)
+
+def b0_emp(x,y):
+    return np.mean(y) - b1_emp(x,y) * np.mean(x)
+
+def a(X, b0_hat, alpha, sigma):
+  n = len(X)
+  x_mean = np.mean(X)
+  return b0_hat - norm.ppf(1-alpha/2) * sigma * np.sqrt(1/n + x_mean**2/sum((X - x_mean)**2))
+
+def b(X, b0_hat, alpha, sigma):
+  n = len(X)
+  x_mean = np.mean(X)
+  return b0_hat + norm.ppf(1-alpha/2) * sigma * np.sqrt(1/n + x_mean**2/sum((X - x_mean)**2))
+
+def c(X, b1_hat, alpha, sigma):
+  n = len(X)
+  x_mean = np.mean(X)
+  return b1_hat - norm.ppf(1-alpha/2) * sigma * np.sqrt(1/sum((X - x_mean)**2))
+
+def d(X, b1_hat, alpha, sigma):
+  n = len(X)
+  x_mean = np.mean(X)
+  return b1_hat + norm.ppf(1-alpha/2) * sigma * np.sqrt(1/sum((X - x_mean)**2))
+
+def prob(n, mc, beta_0, beta_1, sigma, alpha):
+  X = np.arange(0, n) +1
+  b0_prob = 0
+  b1_prob = 0
+  for i in range(mc):
+    e = np.random.normal(0, sigma, size = n)
+    Y = beta_0 + beta_1*X + e
+    b0_hat = b0_emp(X, Y)
+    b1_hat = b1_emp(X, Y)
+    if (a(X, b0_hat, alpha, sigma)<= beta_0) & (beta_0 <= b(X, b0_hat, alpha, sigma)):
+      b0_prob += 1
+    if (c(X, b1_hat, alpha, sigma)<= beta_1) & (beta_1 <= d(X, b1_hat, alpha, sigma)):
+      b1_prob += 1
+  b0_prob = b0_prob/mc
+  b1_prob = b1_prob/mc
+  return b0_prob, b1_prob
+
+xs  = range(100, 1000, 10)
+MC = 500
+for sigma in sigmas:
+  alpha = alphas[0]
+  prob_b0= [prob(i, MC, beta_0, beta_1, sigma, alpha)[0] for i in xs]
+  prob_b1= [prob(i, MC, beta_0, beta_1, sigma, alpha)[1] for i in xs]
+  plt.plot(xs, prob_b0, label = 'b0')
+  plt.axhline(y = 1- alpha, color = 'red', linestyle = '-')
+  plt.title(f'b0, sigma = {sigma}, alpha = {alpha}')
+  plt.show()
+  plt.plot(xs, prob_b1, label = 'b1')
+  plt.axhline(y = 1- alpha, color = 'red', linestyle = '-')
+  plt.title(f'b1, sigma = {sigma}, alpha = {alpha}')
+  plt.show()
