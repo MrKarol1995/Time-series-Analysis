@@ -1,8 +1,12 @@
 import numpy as np
-import scipy.stats as stats
+import scipy.stats as stats, t
 import pandas as pd
 import matplotlib.pyplot as plt
+import math
+from typing import List, Tuple
 
+
+# zad 
 # Parametry
 beta0 = 2
 beta1 = 5
