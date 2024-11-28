@@ -147,8 +147,6 @@ plt.show()
 
 # Zad 4
 
-
-
 def read_columns_from_file(filename: str) -> Tuple[List[float], List[float]]:
     column1 = []
     column2 = []
