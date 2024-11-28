@@ -2,6 +2,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 
+# zad 3
+
 # Funkcje do obliczania autokowariancji i autokorelacji empirycznych
 def sampleACVF(X, h):
     n = len(X)
