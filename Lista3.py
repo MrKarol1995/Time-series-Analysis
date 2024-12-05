@@ -5,7 +5,6 @@ import matplotlib.pyplot as plt
 import math
 from typing import List, Tuple
 
-
 # zad 
 # Parametry
 beta0 = 2
