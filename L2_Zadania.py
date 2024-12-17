@@ -29,7 +29,6 @@ def sb1(x, sigma = sigma):
     return sigma * 1/np.sqrt(sum((xi - x_)**2 for xi in x))
 
 
-
 b1emp = []
 b0emp = []
 for _ in range(M1):
