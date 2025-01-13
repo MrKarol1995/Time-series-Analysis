@@ -4,7 +4,6 @@ import matplotlib.pyplot as plt
 import statsmodels.api as sm
 
 #Zad 1
-
 def estimate_ar2_yule_walker():
     # Ustawienia symulacji
     n_simulations = 1000  # Liczba symulacji Monte Carlo
