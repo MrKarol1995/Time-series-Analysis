@@ -52,7 +52,6 @@ print("Zadanie 1: \n")
 estimate_ar2_yule_walker()
 
 #Zad 2
-
 def compare_ar1_methods():
     # Ustawienia symulacji
     n_simulations = 1000
